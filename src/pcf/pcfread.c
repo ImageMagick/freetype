@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf fonts
 
-  Copyright 2000-2010, 2012, 2013 by
+  Copyright 2000-2010, 2012-2014 by
   Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -78,7 +78,7 @@ THE SOFTWARE.
     FT_FRAME_START( 16  ),
       FT_FRAME_ULONG_LE( type ),
       FT_FRAME_ULONG_LE( format ),
-      FT_FRAME_ULONG_LE( size ),
+      FT_FRAME_ULONG_LE( size ),   /* rounded up to a multiple of 4 */
       FT_FRAME_ULONG_LE( offset ),
     FT_FRAME_END
   };
@@ -95,9 +95,11 @@ THE SOFTWARE.
     FT_Memory  memory = FT_FACE( face )->memory;
     FT_UInt    n;
 
+    FT_ULong   size;
 
-    if ( FT_STREAM_SEEK ( 0 )                          ||
-         FT_STREAM_READ_FIELDS ( pcf_toc_header, toc ) )
+
+    if ( FT_STREAM_SEEK( 0 )                          ||
+         FT_STREAM_READ_FIELDS( pcf_toc_header, toc ) )
       return FT_THROW( Cannot_Open_Resource );
 
     if ( toc->version != PCF_FILE_VERSION                 ||
@@ -154,20 +156,51 @@ THE SOFTWARE.
         break;
     }
 
-    /* we now check whether the `size' and `offset' values are reasonable: */
-    /* `offset' + `size' must not exceed the stream size                   */
+    /*
+     *  We now check whether the `size' and `offset' values are reasonable:
+     *  `offset' + `size' must not exceed the stream size.
+     *
+     *  Note, however, that X11's `pcfWriteFont' routine (used by the
+     *  `bdftopcf' program to create PDF font files) has two special
+     *  features.
+     *
+     *  - It always assigns the accelerator table a size of 100 bytes in the
+     *    TOC, regardless of its real size, which can vary between 34 and 72
+     *    bytes.
+     *
+     *  - Due to the way the routine is designed, it ships out the last font
+     *    table with its real size, ignoring the TOC's size value.  Since
+     *    the TOC size values are always rounded up to a multiple of 4, the
+     *    difference can be up to three bytes for all tables except the
+     *    accelerator table, for which the difference can be as large as 66
+     *    bytes.
+     *
+     */
+
     tables = face->toc.tables;
-    for ( n = 0; n < toc->count; n++ )
+    size   = stream->size;
+
+    for ( n = 0; n < toc->count - 1; n++ )
     {
       /* we need two checks to avoid overflow */
-      if ( ( tables->size   > stream->size                ) ||
-           ( tables->offset > stream->size - tables->size ) )
+      if ( ( tables->size   > size                ) ||
+           ( tables->offset > size - tables->size ) )
       {
         error = FT_THROW( Invalid_Table );
         goto Exit;
       }
       tables++;
     }
+
+    /* only check `tables->offset' for last table element ... */
+    if ( ( tables->offset > size ) )
+    {
+      error = FT_THROW( Invalid_Table );
+      goto Exit;
+    }
+    /* ... and adjust `tables->size' to the real value if necessary */
+    if ( tables->size > size - tables->offset )
+      tables->size = size - tables->offset;
 
 #ifdef FT_DEBUG_LEVEL_TRACE
 
@@ -415,14 +448,14 @@ THE SOFTWARE.
   pcf_get_properties( FT_Stream  stream,
                       PCF_Face   face )
   {
-    PCF_ParseProperty  props      = 0;
+    PCF_ParseProperty  props      = NULL;
     PCF_Property       properties = NULL;
     FT_ULong           nprops, i;
     FT_ULong           format, size;
     FT_Error           error;
     FT_Memory          memory     = FT_FACE( face )->memory;
     FT_ULong           string_size;
-    FT_String*         strings    = 0;
+    FT_String*         strings    = NULL;
 
 
     error = pcf_seek_to_table_type( stream,
@@ -452,9 +485,9 @@ THE SOFTWARE.
       goto Bail;
 
     FT_TRACE4(( "  nprop = %d (truncate %d props)\n",
-                (int)nprops, nprops - (int)nprops ));
+                (int)nprops, nprops - (FT_ULong)(int)nprops ));
 
-    nprops = (int)nprops;
+    nprops = (FT_ULong)(int)nprops;
 
     /* rough estimate */
     if ( nprops > size / PCF_PROPERTY_SIZE )
@@ -587,7 +620,7 @@ THE SOFTWARE.
     FT_Error    error;
     FT_Memory   memory  = FT_FACE( face )->memory;
     FT_ULong    format, size;
-    PCF_Metric  metrics = 0;
+    PCF_Metric  metrics = NULL;
     FT_ULong    nmetrics, i;
 
 
@@ -733,8 +766,7 @@ THE SOFTWARE.
 
     FT_TRACE4(( "  number of bitmaps: %d\n", nbitmaps ));
 
-    /* XXX: PCF_Face->nmetrics is singed FT_Long, see pcf.h */
-    if ( face->nmetrics < 0 || nbitmaps != ( FT_ULong )face->nmetrics )
+    if ( nbitmaps != face->nmetrics )
       return FT_THROW( Invalid_File_Format );
 
     if ( FT_NEW_ARRAY( offsets, nbitmaps ) )
@@ -762,9 +794,10 @@ THE SOFTWARE.
       if ( error )
         goto Bail;
 
-      sizebitmaps = bitmapSizes[PCF_GLYPH_PAD_INDEX( format )];
+      sizebitmaps = (FT_ULong)bitmapSizes[PCF_GLYPH_PAD_INDEX( format )];
 
-      FT_TRACE4(( "  padding %d implies a size of %ld\n", i, bitmapSizes[i] ));
+      FT_TRACE4(( "  padding %d implies a size of %ld\n",
+                  i, bitmapSizes[i] ));
     }
 
     FT_TRACE4(( "  %d bitmaps, padding index %ld\n",
@@ -784,7 +817,7 @@ THE SOFTWARE.
                     " invalid offset to bitmap data of glyph %d\n", i ));
       }
       else
-        face->metrics[i].bits = stream->pos + offsets[i];
+        face->metrics[i].bits = stream->pos + (FT_ULong)offsets[i];
     }
 
     face->bitmapsFormat = format;
@@ -804,8 +837,10 @@ THE SOFTWARE.
     FT_ULong      format, size;
     int           firstCol, lastCol;
     int           firstRow, lastRow;
-    int           nencoding, encodingOffset;
-    int           i, j, k;
+    FT_ULong      nencoding;
+    int           encodingOffset;
+    int           i, j;
+    FT_ULong      k;
     PCF_Encoding  encoding = NULL;
 
 
@@ -860,7 +895,8 @@ THE SOFTWARE.
     FT_TRACE4(( "  firstCol %d, lastCol %d, firstRow %d, lastRow %d\n",
                 firstCol, lastCol, firstRow, lastRow ));
 
-    nencoding = ( lastCol - firstCol + 1 ) * ( lastRow - firstRow + 1 );
+    nencoding = (FT_ULong)( lastCol - firstCol + 1 ) *
+                (FT_ULong)( lastRow - firstRow + 1 );
 
     if ( FT_NEW_ARRAY( encoding, nencoding ) )
       return FT_THROW( Out_Of_Memory );
@@ -879,10 +915,10 @@ THE SOFTWARE.
         else
           encodingOffset = FT_GET_SHORT_LE();
 
-        if ( encodingOffset != -1 )
+        if ( encodingOffset > -1 )
         {
           encoding[k].enc   = i * 256 + j;
-          encoding[k].glyph = (FT_Short)encodingOffset;
+          encoding[k].glyph = (FT_UShort)encodingOffset;
 
           FT_TRACE5(( "  code %d (0x%04X): idx %d\n",
                       encoding[k].enc, encoding[k].enc, encoding[k].glyph ));
@@ -1223,7 +1259,7 @@ THE SOFTWARE.
        *
        * This implies bumping the number of `available' glyphs by 1.
        */
-      root->num_glyphs = face->nmetrics + 1;
+      root->num_glyphs = (FT_Long)( face->nmetrics + 1 );
 
       root->num_fixed_sizes = 1;
       if ( FT_NEW_ARRAY( root->available_sizes, 1 ) )
@@ -1280,7 +1316,7 @@ THE SOFTWARE.
 
       /* set up charset */
       {
-        PCF_Property  charset_registry = 0, charset_encoding = 0;
+        PCF_Property  charset_registry, charset_encoding;
 
 
         charset_registry = pcf_find_property( face, "CHARSET_REGISTRY" );

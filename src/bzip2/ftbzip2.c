@@ -8,11 +8,10 @@
 /*  parse compressed PCF fonts, as found with many X11 server              */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2010, 2012-2014 by                                           */
+/*  Copyright 2010-2015 by                                                 */
 /*  Joel Klinghed.                                                         */
 /*                                                                         */
-/*  Based on src/gzip/ftgzip.c, Copyright 2002 - 2010 by                   */
-/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*  based on `src/gzip/ftgzip.c'                                           */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -71,7 +70,7 @@
                   int        items,
                   int        size )
   {
-    FT_ULong    sz = (FT_ULong)size * items;
+    FT_ULong    sz = (FT_ULong)size * (FT_ULong)items;
     FT_Error    error;
     FT_Pointer  p  = NULL;
 
@@ -131,7 +130,7 @@
     /* head[0] && head[1] are the magic numbers;    */
     /* head[2] is the version, and head[3] the blocksize */
     if ( head[0] != 0x42  ||
-         head[1] != 0x5a  ||
+         head[1] != 0x5A  ||
          head[2] != 0x68  )  /* only support bzip2 (huffman) */
     {
       error = FT_THROW( Invalid_File_Format );

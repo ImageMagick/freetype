@@ -3,7 +3,7 @@
 #
 #    A sub-class container of the `Formatter' class to produce HTML.
 #
-#  Copyright 2002, 2003, 2005-2008, 2013, 2014 by
+#  Copyright 2002-2015 by
 #  David Turner.
 #
 #  This file is part of the FreeType project, and may only be used,
@@ -628,7 +628,7 @@ class  HtmlFormatter( Formatter ):
             for f in self.headers.keys():
                 if block.source.filename.find( f ) >= 0:
                     header = self.headers[f] + ' (' + f + ')'
-                    break;
+                    break
 
 #           if not header:
 #               sys.stderr.write(
