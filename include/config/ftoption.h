@@ -283,9 +283,6 @@ FT_BEGIN_HEADER
 /* #define FT_EXPORT_DEF(x)  x */
 
 
-/*
-  This hunk added for ImageMagick
-*/
 #ifndef  FT_EXPORT_DEF 
 
 /**
