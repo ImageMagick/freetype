@@ -312,6 +312,24 @@ FT_BEGIN_HEADER
 /* #define FT_EXPORT(x)      extern x */
 /* #define FT_EXPORT_DEF(x)  x */
 
+#ifndef  FT_EXPORT_DEF
+#  if defined(_MT) && defined(_DLL) && !defined(_TTFDLL_) && !defined(_LIB)
+#    define _TTFDLL_
+#  endif
+
+#  if defined(_TTFDLL_)
+#    if !defined(_TTFLIB_)
+#      define FT_EXPORT_DEF( x ) __declspec(dllimport) x
+#      define FT_EXPORT( x ) __declspec(dllimport) x
+#    else
+#      define FT_EXPORT_DEF( x ) __declspec(dllexport) x
+#      define FT_EXPORT( x ) __declspec(dllexport) x
+#    endif
+#  else
+#    define FT_EXPORT_DEF( x ) extern x
+#    define FT_EXPORT( x ) extern x
+#  endif
+#endif
 
   /*************************************************************************/
   /*                                                                       */
