@@ -457,30 +457,21 @@ FT_BEGIN_HEADER
   /*                                                                   */
 #ifndef FT_EXPORT
 
-#ifdef FT2_BUILD_LIBRARY
-
-#if defined( _WIN32 ) && defined( DLL_EXPORT )
-#define FT_EXPORT( x )  __declspec( dllexport )  x
-#elif defined( __GNUC__ ) && __GNUC__ >= 4
-#define FT_EXPORT( x )  __attribute__(( visibility( "default" ) ))  x
-#elif defined( __SUNPRO_C ) && __SUNPRO_C >= 0x550
-#define FT_EXPORT( x )  __global  x
-#elif defined( __cplusplus )
-#define FT_EXPORT( x )  extern "C"  x
-#else
-#define FT_EXPORT( x )  extern  x
+#if defined(_MT) && defined(_DLL) && !defined(_TTFDLL_) && !defined(_LIB)
+#  define _TTFDLL_
 #endif
 
+#if defined(_TTFDLL_)
+#  if !defined(_TTFLIB_)
+#    define FT_EXPORT_DEF( x ) __declspec(dllimport) x
+#    define FT_EXPORT( x ) __declspec(dllimport) x
+#  else
+#    define FT_EXPORT_DEF( x ) __declspec(dllexport) x
+#    define FT_EXPORT( x ) __declspec(dllexport) x
+#  endif
 #else
-
-#if defined( _WIN32 ) && defined( DLL_IMPORT )
-#define FT_EXPORT( x )  __declspec( dllimport )  x
-#elif defined( __cplusplus )
-#define FT_EXPORT( x )  extern "C"  x
-#else
-#define FT_EXPORT( x )  extern  x
-#endif
-
+#  define FT_EXPORT_DEF( x ) extern x
+#  define FT_EXPORT( x ) extern x
 #endif
 
 #endif /* !FT_EXPORT */
