@@ -38,7 +38,7 @@ src\type42
 src\winfonts
 
 [INCLUDES]
-zlib->.
+include
 
 [EXCLUDES]
 adler32.c
@@ -75,6 +75,9 @@ type1.c
 type1cid.c
 type42.c
 zutil.c
+
+[INCLUDES]
+zlib->.
 
 [DEPENDENCIES]
 zlib
