@@ -1,4 +1,4 @@
-[DLL]
+[DYNAMIC_LIBRARY]
 
 [LICENSE]
 docs\FTL.TXT
@@ -8,81 +8,56 @@ FT2_BUILD_LIBRARY
 FT_CONFIG_OPTION_ERROR_STRINGS
 FT_CONFIG_OPTION_SYSTEM_ZLIB
 
-[DEFINES_DLL]
+[DYNAMIC_DEFINES]
 DLL_EXPORT
 
-[DIRECTORIES]
-include
-src\autofit
-src\base
-src\bdf
-src\cache
-src\cff
-src\cid
-src\dlg
-src\gzip
-src\lzw
-src\pcf
-src\pfr
-src\psaux
-src\pshinter
-src\psnames
-src\raster
-src\sdf
-src\sfnt
-src\smooth
-src\svg
-src\truetype
-src\type1
-src\type42
-src\winfonts
-
 [INCLUDES]
 include
+
+[INCLUDE_ARTIFACTS]
+include\freetype -> freetype
+include\freetype\config -> freetype\config
+include\dlg -> dlg
+include\ft2build.h -> .
 
 [EXCLUDES]
-adler32.c
-autofit.c
-bdf.c
-cff.c
-crc32.c
-ftbase.c
-ftbsdf.c
-ftcache.c
-ftsdf.c
-ftsdfcommon.c
-ftsdfrend.c
-ftsvg.c
-ftver.rc
-ftzopen.c
-infback.c
-infblock.c
-infcodes.c
-inflate.c
-inffast.c
-inftrees.c
-infutil.c
-pcf.c
-pfr.c
-psaux.c
-pshinter.c
-psnames.c
-raster.c
-sfnt.c
-smooth.c
-truetype.c
-type1.c
-type1cid.c
-type42.c
-zutil.c
+devel\
+builds\
+src\autofit\autofit.c
+src\base\ftbase.c
+src\bdf\bdf.c
+src\cache\ftcache.c
+src\cff\cff.c
+src\cid\type1cid.c
+src\gzip\adler32.c
+src\gzip\crc32.c
+src\gzip\inffast.c
+src\gzip\inflate.c
+src\gzip\inftrees.c
+src\gzip\zutil.c
+src\gxvalid\
+src\lzw\ftzopen.c
+src\otvalid\otvalid.c
+src\pcf\pcf.c
+src\pfr\pfr.c
+src\psaux\psaux.c
+src\pshinter\pshinter.c
+src\psnames\psnames.c
+src\raster\raster.c
+src\sfnt\sfnt.c
+src\sdf\sdf.c
+src\smooth\smooth.c
+src\smooth\smooth.c
+src\truetype\truetype.c
+src\type1\type1.c
+src\type42\type42.c
+src\svg\svg.c
+src\tools\
 
-[INCLUDES]
-zlib->.
-
-[DEPENDENCIES]
+[REFERENCES]
 zlib
 
-[CONFIG_DEFINE]
+[MAGICK_BASECONFIG_DEFINE]
 /*
   Define to use the FreeType (TrueType & Postscript font support) library
 */
