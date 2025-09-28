@@ -1,5 +1,23 @@
 [DYNAMIC_LIBRARY]
 
+[VERSION]
+2.13.3
+
+[RELEASE_DATE]
+2024-08-12
+
+[PRODUCT_NAME]
+freetype
+
+[COMPANY_NAME]
+David Turner, Robert Wilhelm, & Werner Lemberg
+
+[URL]
+https://www.freetype.org
+
+[COPYRIGHT]
+Copyright © 2006 David Turner, Robert Wilhelm, & Werner Lemberg
+
 [LICENSE_FILE]
 docs\FTL.TXT
 
